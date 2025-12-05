@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0; /* Changed background to light gray */
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .present {
+            background-color: #d4edda; /* Light green for Present */
+        }
+        .absent {
+            background-color: #f8d7da; /* Light red for Absent */
+        }
+        #filterSection {
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Attendance Tracker</h1>
+    
+    <form id="attendanceForm">
+        <label for="studentName">Student Name:</label>
+        <input type="text" id="studentName" placeholder="Enter student name">
+        
+        <label for="date">Date:</label>
+        <input type="date" id="date">
+        
+        <label for="status">Attendance Status:</label>
+        <select id="status">
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+        </select>
+        
+        <button type="button" id="addBtn">Add Attendance</button>
+    </form>
+    
+    <button id="viewBtn">View Records</button>
+    
+    <div id="filterSection" style="display: none;">
+        <label for="filterDate">Filter by Date:</label>
+        <input type="date" id="filterDate">
+        <button id="filterBtn">Filter</button>
+        <button id="clearFilterBtn">Clear Filter</button>
+    </div>
+    
+    <table id="recordsTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Student Name</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="recordsBody"></tbody>
+    </table>
+    
+    <script>
+        // Simulate database table as an array of objects (stored in localStorage as JSON)
+        // SQL equivalent: CREATE TABLE attendance (id INTEGER PRIMARY KEY AUTOINCREMENT, student_name VARCHAR(255), date DATE, status VARCHAR(10));
+        let attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+        let nextId = attendanceRecords.length > 0 ? Math.max(...attendanceRecords.map(r => r.id)) + 1 : 1;
+        
+        // Function to save records to localStorage (simulates INSERT)
+        function saveRecords() {
+            localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
+        }
+        
+        // Validation and Add Attendance
+        document.getElementById('addBtn').addEventListener('click', function() {
+            const name = document.getElementById('studentName').value.trim();
+            const date = document.getElementById('date').value;
+            const status = document.getElementById('status').value;
+            
+            // Validation: Name not empty
+            if (!name) {
+                alert('Student name cannot be empty.');
+                return;
+            }
+            
+            // Validation: Date is valid
+            if (!date) {
+                alert('Please select a valid date.');
+                return;
+            }
+            
+            // Validation: Prevent duplicates (same name and date)
+            const exists = attendanceRecords.some(record => record.student_name === name && record.date === date);
+            if (exists) {
+                alert('Attendance for this student on this date already exists.');
+                return;
+            }
+            
+            // Add record (simulates INSERT INTO attendance (student_name, date, status) VALUES (?, ?, ?))
+            const newRecord = { id: nextId++, student_name: name, date: date, status: status };
+            attendanceRecords.push(newRecord);
+            saveRecords();
+            
+            // Clear form
+            document.getElementById('attendanceForm').reset();
+            alert('Attendance added successfully!');
+        });
+        
+        // View Records
+        document.getElementById('viewBtn').addEventListener('click', function() {
+            displayRecords(attendanceRecords);
+            document.getElementById('recordsTable').style.display = 'table';
+            document.getElementById('filterSection').style.display = 'block';
+        });
+        
+        // Filter by Date
+        document.getElementById('filterBtn').addEventListener('click', function() {
+            const filterDate = document.getElementById('filterDate').value;
+            if (!filterDate) {
+                alert('Please select a date to filter.');
+                return;
+            }
+            // SQL equivalent: SELECT * FROM attendance WHERE date = ?
+            const filteredRecords = attendanceRecords.filter(record => record.date === filterDate);
+            displayRecords(filteredRecords);
+        });
+        
+        // Clear Filter
+        document.getElementById('clearFilterBtn').addEventListener('click', function() {
+            document.getElementById('filterDate').value = '';
+            displayRecords(attendanceRecords);
+        });
+        
+        // Function to display records in table (simulates SELECT * FROM attendance)
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsBody');
+            tbody.innerHTML = '';
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                row.className = record.status.toLowerCase(); // Highlight based on status
+                row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td>${record.student_name}</td>
+                    <td>${record.date}</td>
+                    <td>${record.status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
